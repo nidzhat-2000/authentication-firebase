@@ -18,11 +18,16 @@ import {
   getFirestore,
   onSnapshot,
   doc,
+  where,
+  query,
+  deleteDoc,
 } from "firebase/firestore";
 import { toast } from "react-hot-toast";
 import { logIn, logOut } from "../redux/auth";
 import { openModal } from "../redux/modal";
 import { store } from "../redux/store";
+import { setTodos } from "../redux/todos";
+import { setUserData } from "../utils";
 
 const firebaseConfig = {
   // apiKey: process.env.REACT_APP_API_KEY,
@@ -152,32 +157,54 @@ export const reAuth = async (password) => {
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    console.log("user is in");
-    store.dispatch(
-      logIn({
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-        uid: user.uid,
-        emailVerified: user.emailVerified,
-        email: user.email,
-      })
+    // console.log("user is in");
+    // store.dispatch(
+    //   logIn({
+    //     displayName: user.displayName,
+    //     photoURL: user.photoURL,
+    //     uid: user.uid,
+    //     emailVerified: user.emailVerified,
+    //     email: user.email,
+    //   })
+    // );
+
+    setUserData();
+    onSnapshot(
+      query(collection(db, "todos"), where("uid", "==", auth.currentUser.uid)),
+      (doc) => {
+        console.log(doc.docs);
+        store.dispatch(
+          setTodos(
+            doc.docs.reduce(
+              (todos, todo) => [...todos, { ...todo.data(), id: todo.id }],
+              []
+            )
+          )
+        );
+      }
     );
   } else {
-    console.log("user is out");
+    // console.log("user is out");
     store.dispatch(logOut());
   }
 });
 
 export const addTodo = async (data) => {
-  const result = await addDoc(collection(db, "todos"), data);
-  console.log(result, result.id);
+  try {
+    const result = await addDoc(collection(db, "todos"), data);
+    return result.id;
+    // console.log(result, result.id);
+  } catch (err) {
+    toast.error(err.code);
+  }
 };
 
-onSnapshot(doc(db, "todos", "SF"), (doc) => {
-  doc.docs.map((todo) => {
-    console.log(todo.data());
-  });
-  // console.log("Current data: ", doc.data());
-});
+export const deleteTodo = async (id) => {
+  try {
+    await deleteDoc(doc(db, "todos", id));
+  } catch (err) {
+    toast.error(err.code);
+  }
+};
 
 export default app;

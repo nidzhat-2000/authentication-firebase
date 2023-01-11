@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { logIn } from "../../redux/auth";
+import { setUserData } from "../../utils";
 import { auth, update, updateParole } from "../../utils/firebase";
 
 function UpdateProfile() {
@@ -18,15 +19,7 @@ function UpdateProfile() {
       displayName: name,
       photoURL: avatar,
     });
-    dispatch(
-      logIn({
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-        uid: user.uid,
-        emailVerified: user.emailVerified,
-        email: user.email,
-      })
-    );
+    setUserData();
   };
 
   const updatePass = async (e) => {

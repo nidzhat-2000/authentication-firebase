@@ -2,13 +2,19 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { logOut } from "../redux/auth";
-import { addTodo, signOutProfile, verifyEmail } from "../utils/firebase";
-import UpdateProfile from "./Comps/UpdateProfile";
+import {
+  addTodo,
+  deleteTodo,
+  signOutProfile,
+  verifyEmail,
+} from "../utils/firebase";
 
 function Home() {
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const { todos } = useSelector((state) => state.todos);
 
   const [todo, setTodo] = useState("");
   const submitTodo = async (e) => {
@@ -17,6 +23,7 @@ function Home() {
       todo,
       uid: user.uid,
     });
+    setTodo("");
   };
 
   // console.log(user);
@@ -31,6 +38,10 @@ function Home() {
 
   const verify = async () => {
     await verifyEmail();
+  };
+
+  const handleDelete = async (id) => {
+    const result = await deleteTodo(id);
   };
 
   if (user && !user.emailVerified) {
@@ -62,6 +73,24 @@ function Home() {
           />
           <button disabled={!todo}>Add To do</button>
         </form>
+        <ul className="mt-4 flex flex-col g-y-2">
+          {todos.map((todo) => {
+            return (
+              <li
+                className="p-4 flex justify-between align-center rounded bg-indigo-50 text-sm text-indigo-700"
+                key={todo.id}
+              >
+                {todo.todo} - {todo.id}
+                <button
+                  onClick={() => handleDelete(todo.id)}
+                  className="h-7 rounded px-3 text-xs bg-indigo-700 text-white"
+                >
+                  delete
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       </div>
     );
   }
